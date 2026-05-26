@@ -1,6 +1,12 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:file_picker/file_picker.dart';
 import '../../../../core/theme/app_colors.dart';
+import '../../../../core/state/app_state.dart';
 import 'login_screen.dart';
+import 'account_settings_screen.dart';
+import 'notifications_screen.dart';
+import 'help_center_screen.dart';
 
 class ProfileScreen extends StatelessWidget {
   const ProfileScreen({Key? key}) : super(key: key);
@@ -68,105 +74,155 @@ class ProfileScreen extends StatelessWidget {
     );
   }
 
+  Future<void> _pickProfileImage(BuildContext context) async {
+    try {
+      final FilePickerResult? result = await FilePicker.pickFiles(
+        type: FileType.custom,
+        allowedExtensions: ['jpg', 'jpeg', 'png'],
+      );
+
+      if (!context.mounted) return;
+
+      if (result != null && result.files.single.path != null) {
+        final filePath = result.files.single.path!;
+        AppState.instance.updateUserProfile(avatarFilePath: filePath);
+        
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Foto de perfil atualizada com sucesso!'),
+            backgroundColor: AppColors.primary,
+          ),
+        );
+      }
+    } catch (e) {
+      if (!context.mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Erro ao selecionar foto: $e'),
+          backgroundColor: Colors.redAccent,
+        ),
+      );
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: SafeArea(
-        child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.center,
-            children: [
-              const SizedBox(height: 20),
-              // Profile Header Title
-              const Align(
-                alignment: Alignment.centerLeft,
-                child: Text(
-                  'Meu Perfil',
-                  style: TextStyle(
-                    fontSize: 26,
-                    fontWeight: FontWeight.bold,
-                    color: AppColors.textPrimary,
-                    letterSpacing: -0.5,
+    return AnimatedBuilder(
+      animation: AppState.instance,
+      builder: (context, _) {
+        return Scaffold(
+          backgroundColor: AppColors.background,
+          body: SafeArea(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  const SizedBox(height: 20),
+                  // Profile Header Title
+                  const Align(
+                    alignment: Alignment.centerLeft,
+                    child: Text(
+                      'Meu Perfil',
+                      style: TextStyle(
+                        fontSize: 26,
+                        fontWeight: FontWeight.bold,
+                        color: AppColors.textPrimary,
+                        letterSpacing: -0.5,
+                      ),
+                    ),
                   ),
-                ),
-              ),
-              const SizedBox(height: 35),
+                  const SizedBox(height: 35),
 
-              // Rounded Avatar photo with user icon
-              Center(
-                child: Stack(
-                  children: [
-                    Container(
-                      height: 110,
-                      width: 110,
-                      decoration: BoxDecoration(
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: AppColors.primary.withOpacity(0.2),
-                            blurRadius: 15,
-                            offset: const Offset(0, 8),
-                          ),
-                        ],
-                        border: Border.all(
-                          color: AppColors.primary,
-                          width: 3.0,
-                        ),
-                      ),
-                      child: ClipOval(
-                        child: Image.network(
-                          'https://images.unsplash.com/photo-1544005313-94ddf0286df2?q=80&w=300',
-                          fit: BoxFit.cover,
-                          errorBuilder: (context, error, stackTrace) => const Icon(
-                            Icons.person,
-                            size: 55,
-                            color: AppColors.primary,
-                          ),
+                  // Rounded Avatar photo with user icon
+                  Center(
+                    child: GestureDetector(
+                      onTap: () => _pickProfileImage(context),
+                      child: MouseRegion(
+                        cursor: SystemMouseCursors.click,
+                        child: Stack(
+                          children: [
+                            Container(
+                              height: 110,
+                              width: 110,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: AppColors.primary.withOpacity(0.2),
+                                    blurRadius: 15,
+                                    offset: const Offset(0, 8),
+                                  ),
+                                ],
+                                border: Border.all(
+                                  color: AppColors.primary,
+                                  width: 3.0,
+                                ),
+                              ),
+                              child: ClipOval(
+                                child: AppState.instance.userAvatarFilePath != null
+                                    ? Image.file(
+                                        File(AppState.instance.userAvatarFilePath!),
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) => const Icon(
+                                          Icons.broken_image_rounded,
+                                          size: 55,
+                                          color: AppColors.primary,
+                                        ),
+                                      )
+                                    : Image.network(
+                                        AppState.instance.userAvatarUrl,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) => const Icon(
+                                          Icons.person,
+                                          size: 55,
+                                          color: AppColors.primary,
+                                        ),
+                                      ),
+                              ),
+                            ),
+                            // Small active overlay icon
+                            Positioned(
+                              bottom: 0,
+                              right: 2,
+                              child: Container(
+                                padding: const EdgeInsets.all(6),
+                                decoration: const BoxDecoration(
+                                  color: AppColors.primary,
+                                  shape: BoxShape.circle,
+                                ),
+                                child: const Icon(
+                                  Icons.camera_alt_rounded,
+                                  color: Colors.white,
+                                  size: 15,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                       ),
                     ),
-                    // Small active overlay icon
-                    Positioned(
-                      bottom: 0,
-                      right: 2,
-                      child: Container(
-                        padding: const EdgeInsets.all(6),
-                        decoration: const BoxDecoration(
-                          color: AppColors.primary,
-                          shape: BoxShape.circle,
-                        ),
-                        child: const Icon(
-                          Icons.camera_alt_rounded,
-                          color: Colors.white,
-                          size: 15,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              const SizedBox(height: 18),
+                  ),
+                  const SizedBox(height: 18),
 
-              // Name & Email
-              const Text(
-                'Usuário EasyTrip',
-                style: TextStyle(
-                  fontSize: 20,
-                  fontWeight: FontWeight.bold,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              const SizedBox(height: 4),
-              const Text(
-                'usuario@easytrip.com',
-                style: TextStyle(
-                  fontSize: 14,
-                  color: AppColors.textSecondary,
-                ),
-              ),
-              const SizedBox(height: 40),
+                  // Name & Email
+                  Text(
+                    AppState.instance.userName,
+                    style: const TextStyle(
+                      fontSize: 20,
+                      fontWeight: FontWeight.bold,
+                      color: AppColors.textPrimary,
+                    ),
+                  ),
+                  const SizedBox(height: 4),
+                  Text(
+                    AppState.instance.userEmail,
+                    style: const TextStyle(
+                      fontSize: 14,
+                      color: AppColors.textSecondary,
+                    ),
+                  ),
+                  const SizedBox(height: 40),
 
               // Options Menu
               Container(
@@ -189,19 +245,25 @@ class ProfileScreen extends StatelessWidget {
                     _buildOptionTile(
                       icon: Icons.manage_accounts_rounded,
                       title: 'Configurações da Conta',
-                      onTap: () {},
+                      onTap: () {
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => const AccountSettingsScreen()));
+                      },
                     ),
                     const Divider(height: 1, color: AppColors.border),
                     _buildOptionTile(
                       icon: Icons.notifications_active_rounded,
                       title: 'Notificações',
-                      onTap: () {},
+                      onTap: () {
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => const NotificationsScreen()));
+                      },
                     ),
                     const Divider(height: 1, color: AppColors.border),
                     _buildOptionTile(
                       icon: Icons.help_center_rounded,
                       title: 'Central de Ajuda',
-                      onTap: () {},
+                      onTap: () {
+                        Navigator.push(context, MaterialPageRoute(builder: (context) => const HelpCenterScreen()));
+                      },
                     ),
                     const Divider(height: 1, color: AppColors.border),
                     _buildOptionTile(
@@ -228,7 +290,9 @@ class ProfileScreen extends StatelessWidget {
         ),
       ),
     );
-  }
+  },
+);
+}
 
   Widget _buildOptionTile({
     required IconData icon,

@@ -135,7 +135,8 @@ bool Win32Window::Create(const std::wstring& title,
   double scale_factor = dpi / 96.0;
 
   HWND window = CreateWindow(
-      window_class, title.c_str(), WS_OVERLAPPEDWINDOW,
+      window_class, title.c_str(),
+      WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX,
       Scale(origin.x, scale_factor), Scale(origin.y, scale_factor),
       Scale(size.width, scale_factor), Scale(size.height, scale_factor),
       nullptr, nullptr, GetModuleHandle(nullptr), this);
@@ -143,6 +144,17 @@ bool Win32Window::Create(const std::wstring& title,
   if (!window) {
     return false;
   }
+
+  // Center the window on the primary monitor.
+  RECT workArea;
+  SystemParametersInfo(SPI_GETWORKAREA, 0, &workArea, 0);
+  RECT windowRect;
+  GetWindowRect(window, &windowRect);
+  int windowWidth  = windowRect.right  - windowRect.left;
+  int windowHeight = windowRect.bottom - windowRect.top;
+  int posX = workArea.left + (workArea.right  - workArea.left - windowWidth)  / 2;
+  int posY = workArea.top  + (workArea.bottom - workArea.top  - windowHeight) / 2;
+  SetWindowPos(window, nullptr, posX, posY, 0, 0, SWP_NOSIZE | SWP_NOZORDER);
 
   UpdateTheme(window);
 
@@ -216,6 +228,18 @@ Win32Window::MessageHandler(HWND hwnd,
     case WM_DWMCOLORIZATIONCOLORCHANGED:
       UpdateTheme(hwnd);
       return 0;
+    case WM_GETMINMAXINFO: {
+      // Lock window to exact fixed size (non-resizable).
+      RECT windowRect;
+      GetWindowRect(hwnd, &windowRect);
+      int w = windowRect.right  - windowRect.left;
+      int h = windowRect.bottom - windowRect.top;
+      auto* mmi = reinterpret_cast<MINMAXINFO*>(lparam);
+      mmi->ptMinTrackSize = {w, h};
+      mmi->ptMaxTrackSize = {w, h};
+      return 0;
+    }
+
   }
 
   return DefWindowProc(window_handle_, message, wparam, lparam);

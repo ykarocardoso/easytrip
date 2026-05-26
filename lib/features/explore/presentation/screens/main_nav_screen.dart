@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import '../../../../core/state/app_state.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../features/explore/presentation/screens/explore_screen.dart';
+import '../../../../features/explore/presentation/screens/home_screen.dart';
 import '../../../../features/wishlist/presentation/screens/wishlist_screen.dart';
 import '../../../../features/trip/presentation/screens/trip_screen.dart';
 import '../../../../features/profile/presentation/screens/profile_screen.dart';
@@ -23,7 +24,7 @@ class MainNavScreen extends StatelessWidget {
             index: currentIndex,
             children: const [
               ExploreScreen(), // Tab 0: Explorar
-              ExploreScreen(), // Tab 1: Início
+              HomeScreen(), // Tab 1: Início
               WishlistScreen(), // Tab 2: Desejos
               TripScreen(), // Tab 3: Trip
               ProfileScreen(), // Tab 4: Perfil

@@ -1,3 +1,4 @@
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
@@ -20,6 +21,14 @@ void main() {
   runApp(const EasyTripApp());
 }
 
+class AppScrollBehavior extends MaterialScrollBehavior {
+  @override
+  Set<PointerDeviceKind> get dragDevices => {
+        PointerDeviceKind.touch,
+        PointerDeviceKind.mouse,
+      };
+}
+
 class EasyTripApp extends StatelessWidget {
   const EasyTripApp({Key? key}) : super(key: key);
 
@@ -28,6 +37,7 @@ class EasyTripApp extends StatelessWidget {
     return MaterialApp(
       title: 'EasyTrip',
       debugShowCheckedModeBanner: false,
+      scrollBehavior: AppScrollBehavior(),
       theme: ThemeData(
         useMaterial3: true,
         primaryColor: AppColors.primary,
