@@ -4,9 +4,17 @@ import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'core/theme/app_colors.dart';
 import 'features/profile/presentation/screens/login_screen.dart';
+import 'core/database/database_helper.dart';
+import 'core/state/app_state.dart';
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  
+  // Initialize database helper (Ffi config on desktop)
+  await DatabaseHelper.init();
+  
+  // Load saved user profile and favorites from SQLite
+  await AppState.instance.initialize();
   
   // Set preferred orientation and system status bar style for premium aesthetics
   SystemChrome.setSystemUIOverlayStyle(

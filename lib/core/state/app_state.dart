@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../data/place_model.dart';
 import '../mock/mock_data.dart';
+import '../database/database_helper.dart';
 
 class TripModel {
   final PlaceModel place;
@@ -41,7 +42,34 @@ class AppState extends ChangeNotifier {
   String get userAvatarUrl => _userAvatarUrl;
   String? get userAvatarFilePath => _userAvatarFilePath;
 
-  void updateUserProfile({String? name, String? email, String? avatarUrl, String? avatarFilePath}) {
+  Future<void> initialize() async {
+    // Load profile
+    final profile = await DatabaseHelper.instance.getUserProfile();
+    if (profile != null) {
+      _userName = profile['name'] as String? ?? _userName;
+      _userEmail = profile['email'] as String? ?? _userEmail;
+      _userAvatarUrl = profile['avatar_url'] as String? ?? _userAvatarUrl;
+      _userAvatarFilePath = profile['avatar_file_path'] as String?;
+    }
+
+    // Load favorites
+    final favIds = await DatabaseHelper.instance.getFavoriteIds();
+    _places = _places.map((place) {
+      if (favIds.contains(place.id)) {
+        return place.copyWith(isFavorited: true);
+      }
+      return place.copyWith(isFavorited: false);
+    }).toList();
+
+    notifyListeners();
+  }
+
+  Future<void> updateUserProfile({
+    String? name,
+    String? email,
+    String? avatarUrl,
+    String? avatarFilePath,
+  }) async {
     if (name != null) _userName = name;
     if (email != null) _userEmail = email;
     if (avatarUrl != null) {
@@ -52,6 +80,14 @@ class AppState extends ChangeNotifier {
       _userAvatarFilePath = avatarFilePath;
     }
     notifyListeners();
+
+    await DatabaseHelper.instance.saveUserProfile(
+      name: name,
+      email: email,
+      avatarUrl: avatarUrl,
+      avatarFilePath: avatarFilePath,
+      clearFilePath: avatarUrl != null,
+    );
   }
 
   List<PlaceModel> get favoritePlaces =>
@@ -65,13 +101,16 @@ class AppState extends ChangeNotifier {
     }
   }
 
-  void toggleFavorite(String id) {
+  Future<void> toggleFavorite(String id) async {
     final index = _places.indexWhere((place) => place.id == id);
     if (index != -1) {
+      final isNewFav = !_places[index].isFavorited;
       _places[index] = _places[index].copyWith(
-        isFavorited: !_places[index].isFavorited,
+        isFavorited: isNewFav,
       );
       notifyListeners();
+
+      await DatabaseHelper.instance.setFavorite(id, isFavorited: isNewFav);
     }
   }
 
