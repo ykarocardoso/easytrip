@@ -1,6 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
-import 'package:file_picker/file_picker.dart';
+import 'package:image_picker/image_picker.dart';
 import '../../../../core/theme/app_colors.dart';
 import '../../../../core/state/app_state.dart';
 import 'login_screen.dart';
@@ -76,15 +76,13 @@ class ProfileScreen extends StatelessWidget {
 
   Future<void> _pickProfileImage(BuildContext context) async {
     try {
-      final FilePickerResult? result = await FilePicker.pickFiles(
-        type: FileType.custom,
-        allowedExtensions: ['jpg', 'jpeg', 'png'],
-      );
+      final ImagePicker picker = ImagePicker();
+      final XFile? image = await picker.pickImage(source: ImageSource.gallery);
 
       if (!context.mounted) return;
 
-      if (result != null && result.files.single.path != null) {
-        final filePath = result.files.single.path!;
+      if (image != null) {
+        final filePath = image.path;
         AppState.instance.updateUserProfile(avatarFilePath: filePath);
         
         ScaffoldMessenger.of(context).showSnackBar(
