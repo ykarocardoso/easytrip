@@ -1,6 +1,7 @@
 import 'dart:io';
 import 'package:path/path.dart';
-import 'package:sqflite_common_ffi/sqflite_ffi.dart';
+import 'package:sqflite/sqflite.dart';
+import 'package:sqflite_common_ffi/sqflite_ffi.dart' as sqflite_ffi;
 
 class DatabaseHelper {
   // ─── Singleton ───────────────────────────────────────────────────────────
@@ -13,8 +14,8 @@ class DatabaseHelper {
   /// Must be called once before any DB operation (in main()).
   static Future<void> init() async {
     if (Platform.isWindows || Platform.isLinux || Platform.isMacOS) {
-      sqfliteFfiInit();
-      databaseFactory = databaseFactoryFfi;
+      sqflite_ffi.sqfliteFfiInit();
+      databaseFactory = sqflite_ffi.databaseFactoryFfi;
     }
   }
 
